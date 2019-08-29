@@ -109,10 +109,10 @@ impl ShellManager {
         env[self.current_shell].homedir()
     }
 
-    pub fn ls(&self, args: EvaluatedWholeStreamCommandArgs) -> Result<OutputStream, ShellError> {
+    pub fn ls(&self, args: EvaluatedWholeStreamCommandArgs, registry: &CommandRegistry) -> Result<OutputStream, ShellError> {
         let env = self.shells.lock().unwrap();
 
-        env[self.current_shell].ls(args)
+        env[self.current_shell].ls(args, registry)
     }
 
     pub fn cd(&self, args: EvaluatedWholeStreamCommandArgs) -> Result<OutputStream, ShellError> {

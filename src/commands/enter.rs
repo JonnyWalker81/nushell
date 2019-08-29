@@ -12,7 +12,12 @@ impl PerItemCommand for Enter {
     }
 
     fn signature(&self) -> registry::Signature {
-        Signature::build("enter").required("location", SyntaxType::Block)
+        Signature::build("enter")
+            .required("location", SyntaxType::Block)
+    }
+
+    fn usage(&self) -> &str {
+        "Create a new shell and begin at this path."
     }
 
     fn run(

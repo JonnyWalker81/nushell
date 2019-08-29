@@ -73,7 +73,7 @@ impl Shell for ValueShell {
         dirs::home_dir()
     }
 
-    fn ls(&self, _args: EvaluatedWholeStreamCommandArgs) -> Result<OutputStream, ShellError> {
+    fn ls(&self, _args: EvaluatedWholeStreamCommandArgs, _registry: &CommandRegistry) -> Result<OutputStream, ShellError> {
         Ok(self
             .members()
             .map(|x| ReturnSuccess::value(x))

@@ -76,7 +76,7 @@ impl Shell for FilesystemShell {
         dirs::home_dir()
     }
 
-    fn ls(&self, args: EvaluatedWholeStreamCommandArgs) -> Result<OutputStream, ShellError> {
+    fn ls(&self, args: EvaluatedWholeStreamCommandArgs, _registry: &CommandRegistry) -> Result<OutputStream, ShellError> {
         let cwd = self.path();
         let mut full_path = PathBuf::from(self.path());
 

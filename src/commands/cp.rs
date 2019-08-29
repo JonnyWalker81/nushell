@@ -15,16 +15,6 @@ pub struct CopyArgs {
 }
 
 impl PerItemCommand for Cpy {
-    fn run(
-        &self,
-        call_info: &CallInfo,
-        _registry: &CommandRegistry,
-        shell_manager: &ShellManager,
-        _input: Tagged<Value>,
-    ) -> Result<OutputStream, ShellError> {
-        call_info.process(shell_manager, cp)?.run()
-    }
-
     fn name(&self) -> &str {
         "cp"
     }
@@ -35,6 +25,20 @@ impl PerItemCommand for Cpy {
             .required("dst", SyntaxType::Path)
             .named("file", SyntaxType::Any)
             .switch("recursive")
+    }
+
+    fn usage(&self) -> &str {
+        "Copy files."
+    }
+
+    fn run(
+        &self,
+        call_info: &CallInfo,
+        _registry: &CommandRegistry,
+        shell_manager: &ShellManager,
+        _input: Tagged<Value>,
+    ) -> Result<OutputStream, ShellError> {
+        call_info.process(shell_manager, cp)?.run()
     }
 }
 

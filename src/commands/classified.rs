@@ -132,81 +132,104 @@ impl InternalCommand {
         let mut stream = VecDeque::new();
         while let Some(item) = result.next().await {
             match item? {
-                ReturnSuccess::Action(action) => match action {
-                    CommandAction::ChangePath(path) => {
-                        context.shell_manager.set_path(path);
-                    }
-                    CommandAction::AddSpanSource(uuid, span_source) => {
-                        context.add_span_source(uuid, span_source);
-                    }
-                    CommandAction::Exit => std::process::exit(0),
-                    CommandAction::EnterValueShell(value) => {
-                        context
-                            .shell_manager
-                            .insert_at_current(Box::new(ValueShell::new(value)));
-                    }
-                    CommandAction::EnterShell(location) => {
-                        let path = std::path::Path::new(&location);
+                ReturnSuccess::Action(action) => {
+                    match action {
+                        CommandAction::ChangePath(path) => {
+                            context.shell_manager.set_path(path);
+                        }
+                        CommandAction::AddSpanSource(uuid, span_source) => {
+                            context.add_span_source(uuid, span_source);
+                        }
+                        CommandAction::Exit => std::process::exit(0),
+                        CommandAction::EnterHelpShell(value) => {
+                            context
+                                .shell_manager
+                                .insert_at_current(Box::new(HelpShell::new(value)));
+                        }
+                        CommandAction::EnterValueShell(value) => {
+                            context
+                                .shell_manager
+                                .insert_at_current(Box::new(ValueShell::new(value)));
+                        }
+                        CommandAction::EnterShell(location) => {
+                            if location.starts_with("nu:") {
+                                let nu_command = location.split(":").collect::<Vec<&str>>();
 
-                        if path.is_dir() {
-                            // If it's a directory, add a new filesystem shell
-                            context.shell_manager.insert_at_current(Box::new(
-                                FilesystemShell::with_location(
-                                    location,
-                                    context.registry().clone(),
-                                )?,
-                            ));
-                        } else {
-                            // If it's a file, attempt to open the file as a value and enter it
-                            let cwd = context.shell_manager.path();
+                                let (_, cmd) = (nu_command[0], nu_command[1]);
 
-                            let full_path = std::path::PathBuf::from(cwd);
-
-                            let (file_extension, contents, contents_tag, span_source) =
-                                crate::commands::open::fetch(
-                                    &full_path,
-                                    &location,
-                                    Span::unknown(),
-                                )
-                                .await?;
-
-                            if let Some(uuid) = contents_tag.origin {
-                                // If we have loaded something, track its source
-                                context.add_span_source(uuid, span_source);
-                            }
-
-                            match contents {
-                                Value::Primitive(Primitive::String(string)) => {
-                                    let value = crate::commands::open::parse_string_as_value(
-                                        file_extension,
-                                        string,
-                                        contents_tag,
-                                        Span::unknown(),
-                                    )?;
-
-                                    context
-                                        .shell_manager
-                                        .insert_at_current(Box::new(ValueShell::new(value)));
+                                if context.registry().has(cmd) {
+                                    context.shell_manager.insert_at_current(Box::new(
+                                        HelpShell::new(Tagged::from_simple_spanned_item(
+                                            Value::string(cmd),
+                                            Span::unknown(),
+                                        )),
+                                    ))
                                 }
-                                value => context.shell_manager.insert_at_current(Box::new(
-                                    ValueShell::new(value.tagged(contents_tag)),
-                                )),
+                            } else {
+                                let path = std::path::Path::new(&location);
+
+                                if path.is_dir() {
+                                    // If it's a directory, add a new filesystem shell
+                                    context.shell_manager.insert_at_current(Box::new(
+                                        FilesystemShell::with_location(
+                                            location,
+                                            context.registry().clone(),
+                                        )?,
+                                    ));
+                                } else {
+                                    // If it's a file, attempt to open the file as a value and enter it
+                                    let cwd = context.shell_manager.path();
+
+                                    let full_path = std::path::PathBuf::from(cwd);
+
+                                    let (file_extension, contents, contents_tag, span_source) =
+                                        crate::commands::open::fetch(
+                                            &full_path,
+                                            &location,
+                                            Span::unknown(),
+                                        )
+                                        .await?;
+
+                                    if let Some(uuid) = contents_tag.origin {
+                                        // If we have loaded something, track its source
+                                        context.add_span_source(uuid, span_source);
+                                    }
+
+                                    match contents {
+                                        Value::Primitive(Primitive::String(string)) => {
+                                            let value =
+                                                crate::commands::open::parse_string_as_value(
+                                                    file_extension,
+                                                    string,
+                                                    contents_tag,
+                                                    Span::unknown(),
+                                                )?;
+
+                                            context.shell_manager.insert_at_current(Box::new(
+                                                ValueShell::new(value),
+                                            ));
+                                        }
+                                        value => context.shell_manager.insert_at_current(Box::new(
+                                            ValueShell::new(value.tagged(contents_tag)),
+                                        )),
+                                    }
+                                }
+                            }
+                        }
+                        CommandAction::PreviousShell => {
+                            context.shell_manager.prev();
+                        }
+                        CommandAction::NextShell => {
+                            context.shell_manager.next();
+                        }
+                        CommandAction::LeaveShell => {
+                            context.shell_manager.remove_at_current();
+                            if context.shell_manager.is_empty() {
+                                std::process::exit(0);
                             }
                         }
                     }
-                    CommandAction::PreviousShell => {
-                        context.shell_manager.prev();
-                    }
-                    CommandAction::NextShell => {
-                        context.shell_manager.next();
-                    }
-                    CommandAction::LeaveShell => {
-                        context.shell_manager.remove_at_current();
-                        if context.shell_manager.is_empty() {
-                            std::process::exit(0);
-                        }
-                    }
-                },
+                }
 
                 ReturnSuccess::Value(v) => {
                     stream.push_back(v);

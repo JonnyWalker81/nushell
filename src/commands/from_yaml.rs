@@ -6,20 +6,24 @@ use crate::prelude::*;
 pub struct FromYAML;
 
 impl WholeStreamCommand for FromYAML {
-    fn run(
-        &self,
-        args: CommandArgs,
-        registry: &CommandRegistry,
-    ) -> Result<OutputStream, ShellError> {
-        from_yaml(args, registry)
-    }
-
     fn name(&self) -> &str {
         "from-yaml"
     }
 
     fn signature(&self) -> Signature {
         Signature::build("from-yaml")
+    }
+
+    fn usage(&self) -> &str {
+        "Parse text as .yaml/.yml and create table."
+    }
+
+    fn run(
+        &self,
+        args: CommandArgs,
+        registry: &CommandRegistry,
+    ) -> Result<OutputStream, ShellError> {
+        from_yaml(args, registry)
     }
 }
 
