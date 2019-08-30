@@ -24,16 +24,16 @@ async fn cpu(tag: Tag) -> Option<Tagged<Value>> {
 
         let current_speed =
             (cpu_speed.current().get() as f64 / 1000000000.0 * 100.0).round() / 100.0;
-        cpu_idx.insert("current ghz", Primitive::Float(current_speed.into()));
+        cpu_idx.insert("current ghz", Primitive::number(current_speed));
 
         if let Some(min_speed) = cpu_speed.min() {
             let min_speed = (min_speed.get() as f64 / 1000000000.0 * 100.0).round() / 100.0;
-            cpu_idx.insert("min ghz", Primitive::Float(min_speed.into()));
+            cpu_idx.insert("min ghz", Primitive::number(min_speed));
         }
 
         if let Some(max_speed) = cpu_speed.max() {
             let max_speed = (max_speed.get() as f64 / 1000000000.0 * 100.0).round() / 100.0;
-            cpu_idx.insert("max ghz", Primitive::Float(max_speed.into()));
+            cpu_idx.insert("max ghz", Primitive::number(max_speed));
         }
         Some(cpu_idx.into_tagged_value())
     } else {
@@ -152,13 +152,13 @@ async fn battery(tag: Tag) -> Option<Value> {
                     if let Some(time_to_full) = battery.time_to_full() {
                         dict.insert(
                             "mins to full",
-                            Value::float(time_to_full.get::<battery::units::time::minute>() as f64),
+                            Value::number(time_to_full.get::<battery::units::time::minute>()),
                         );
                     }
                     if let Some(time_to_empty) = battery.time_to_empty() {
                         dict.insert(
                             "mins to empty",
-                            Value::float(time_to_empty.get::<battery::units::time::minute>() as f64),
+                            Value::number(time_to_empty.get::<battery::units::time::minute>()),
                         );
                     }
                     output.push(dict.into_tagged_value());

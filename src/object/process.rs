@@ -16,8 +16,8 @@ pub(crate) fn process_dict(proc: &sysinfo::Process, tag: impl Into<Tag>) -> Tagg
 
     dict.insert("pid", Value::int(proc.pid() as i64));
     dict.insert("status", Value::string(proc.status().to_string()));
-    dict.insert("cpu", Value::float(proc.cpu_usage() as f64));
-    //dict.insert("name", Value::string(proc.name()));
+    dict.insert("cpu", Value::number(proc.cpu_usage()));
+
     match cmd_value {
         Value::Primitive(Primitive::Nothing) => {
             dict.insert("name", Value::string(proc.name()));

@@ -1,5 +1,4 @@
 use crate::commands::WholeStreamCommand;
-use crate::object::base::OF64;
 use crate::object::{Primitive, TaggedDictBuilder, Value};
 use crate::prelude::*;
 
@@ -36,9 +35,7 @@ fn convert_json_value_to_nu_value(v: &serde_hjson::Value, tag: impl Into<Tag>) -
             Value::Primitive(Primitive::String(String::from(""))).tagged(tag)
         }
         serde_hjson::Value::Bool(b) => Value::Primitive(Primitive::Boolean(*b)).tagged(tag),
-        serde_hjson::Value::F64(n) => {
-            Value::Primitive(Primitive::Float(OF64::from(*n))).tagged(tag)
-        }
+        serde_hjson::Value::F64(n) => Value::Primitive(Primitive::from(*n)).tagged(tag),
         serde_hjson::Value::U64(n) => Value::Primitive(Primitive::Int(*n as i64)).tagged(tag),
         serde_hjson::Value::I64(n) => Value::Primitive(Primitive::Int(*n as i64)).tagged(tag),
         serde_hjson::Value::String(s) => {
